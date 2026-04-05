@@ -1,0 +1,189 @@
+(.venv) PS C:\Users\atamolsh\Desktop\meeting_agent> streamlit run app.py
+
+  You can now view your Streamlit app in your browser.
+
+  Local URL: http://localhost:8501
+  Network URL: http://192.168.0.103:8501
+
+2026-04-05 23:56:23.502 Uncaught app execution
+Traceback (most recent call last):
+  File "C:\Users\atamolsh\Desktop\meeting_agent\.venv\Lib\site-packages\streamlit\runtime\scriptrunner\exec_code.py", line 129, in exec_func_with_error_handling
+    result = func()
+             ^^^^^^
+  File "C:\Users\atamolsh\Desktop\meeting_agent\.venv\Lib\site-packages\streamlit\runtime\scriptrunner\script_runner.py", line 689, in code_to_exec
+    exec(code, module.__dict__)  # noqa: S102
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\atamolsh\Desktop\meeting_agent\app.py", line 117, in <module>
+    result = run_agent(transcript, config)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\atamolsh\Desktop\meeting_agent\agent.py", line 75, in run_agent
+    result = _stream_agent(user_message, config)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\atamolsh\Desktop\meeting_agent\agent.py", line 35, in _stream_agent
+    for stream_mode, chunk in agent.stream(
+  File "C:\Users\atamolsh\Desktop\meeting_agent\.venv\Lib\site-packages\langgraph\pregel\main.py", line 2736, in stream
+    for _ in runner.tick(
+  File "C:\Users\atamolsh\Desktop\meeting_agent\.venv\Lib\site-packages\langgraph\pregel\_runner.py", line 258, in tick
+    _panic_or_proceed(
+  File "C:\Users\atamolsh\Desktop\meeting_agent\.venv\Lib\site-packages\langgraph\pregel\_runner.py", line 520, in _panic_or_proceed
+    raise exc
+  File "C:\Users\atamolsh\Desktop\meeting_agent\.venv\Lib\site-packages\langgraph\pregel\_executor.py", line 80, in done
+    task.result()
+  File "C:\Program Files\Python311\Lib\concurrent\futures\_base.py", line 449, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python311\Lib\concurrent\futures\_base.py", line 401, in __get_result
+    raise self._exception
+  File "C:\Program Files\Python311\Lib\concurrent\futures\thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\atamolsh\Desktop\meeting_agent\.venv\Lib\site-packages\langgraph\pregel\_retry.py", line 126, in run_with_retry
+    return task.proc.invoke(task.input, config)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\atamolsh\Desktop\meeting_agent\.venv\Lib\site-packages\langgraph\_internal\_runnable.py", line 656, in invoke
+    input = context.run(step.invoke, input, config, **kwargs)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\atamolsh\Desktop\meeting_agent\.venv\Lib\site-packages\langgraph\_internal\_runnable.py", line 400, in invoke
+    ret = self.func(*args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\atamolsh\Desktop\meeting_agent\.venv\Lib\site-packages\langgraph\prebuilt\tool_node.py", line 818, in _func
+    outputs = list(
+              ^^^^^
+  File "C:\Program Files\Python311\Lib\concurrent\futures\_base.py", line 619, in result_iterator
+    yield _result_or_cancel(fs.pop())
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python311\Lib\concurrent\futures\_base.py", line 317, in _result_or_cancel
+    return fut.result(timeout)
+           ^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python311\Lib\concurrent\futures\_base.py", line 449, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python311\Lib\concurrent\futures\_base.py", line 401, in __get_result
+    raise self._exception
+  File "C:\Program Files\Python311\Lib\concurrent\futures\thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\atamolsh\Desktop\meeting_agent\.venv\Lib\site-packages\langchain_core\runnables\config.py", line 579, in _wrapped_fn
+    return contexts.pop().run(fn, *args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\atamolsh\Desktop\meeting_agent\.venv\Lib\site-packages\langgraph\prebuilt\tool_node.py", line 1031, in _run_one
+    return self._execute_tool_sync(tool_request, input_type, config)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\atamolsh\Desktop\meeting_agent\.venv\Lib\site-packages\langgraph\prebuilt\tool_node.py", line 980, in _execute_tool_sync
+    content = _handle_tool_error(e, flag=self._handle_tool_errors)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\atamolsh\Desktop\meeting_agent\.venv\Lib\site-packages\langgraph\prebuilt\tool_node.py", line 432, in _handle_tool_error
+    content = flag(e)  # type: ignore [assignment, call-arg]
+              ^^^^^^^
+  File "C:\Users\atamolsh\Desktop\meeting_agent\.venv\Lib\site-packages\langgraph\prebuilt\tool_node.py", line 389, in _default_handle_tool_errors
+    raise e
+  File "C:\Users\atamolsh\Desktop\meeting_agent\.venv\Lib\site-packages\langgraph\prebuilt\tool_node.py", line 937, in _execute_tool_sync
+    response = tool.invoke(call_args, config)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\atamolsh\Desktop\meeting_agent\.venv\Lib\site-packages\langchain_core\tools\base.py", line 642, in invoke
+    return self.run(tool_input, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\atamolsh\Desktop\meeting_agent\.venv\Lib\site-packages\langchain_core\tools\base.py", line 1001, in run
+    raise error_to_raise
+  File "C:\Users\atamolsh\Desktop\meeting_agent\.venv\Lib\site-packages\langchain_core\tools\base.py", line 967, in run
+    response = context.run(self._run, *tool_args, **tool_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\atamolsh\Desktop\meeting_agent\.venv\Lib\site-packages\langchain_core\tools\structured.py", line 97, in _run
+    return self.func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\atamolsh\Desktop\meeting_agent\tools.py", line 108, in persist_results
+    tool_call_id = config["invocation_params"]["tool_call_id"]
+                   ~~~~~~^^^^^^^^^^^^^^^^^^^^^
+KeyError: 'invocation_params'
+During task with name 'tools' and id '62bd586f-02bc-b7db-2bc0-4aa11b68621e'
+
+
+KeyError: 'invocation_params'
+Traceback:
+File "C:\Users\atamolsh\Desktop\meeting_agent\.venv\Lib\site-packages\streamlit\runtime\scriptrunner\exec_code.py", line 129, in exec_func_with_error_handling
+    result = func()
+             ^^^^^^
+File "C:\Users\atamolsh\Desktop\meeting_agent\.venv\Lib\site-packages\streamlit\runtime\scriptrunner\script_runner.py", line 689, in code_to_exec
+    exec(code, module.__dict__)  # noqa: S102
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+File "C:\Users\atamolsh\Desktop\meeting_agent\app.py", line 117, in <module>
+    result = run_agent(transcript, config)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+File "C:\Users\atamolsh\Desktop\meeting_agent\agent.py", line 75, in run_agent
+    result = _stream_agent(user_message, config)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+File "C:\Users\atamolsh\Desktop\meeting_agent\agent.py", line 35, in _stream_agent
+    for stream_mode, chunk in agent.stream(
+File "C:\Users\atamolsh\Desktop\meeting_agent\.venv\Lib\site-packages\langgraph\pregel\main.py", line 2736, in stream
+    for _ in runner.tick(
+File "C:\Users\atamolsh\Desktop\meeting_agent\.venv\Lib\site-packages\langgraph\pregel\_runner.py", line 258, in tick
+    _panic_or_proceed(
+File "C:\Users\atamolsh\Desktop\meeting_agent\.venv\Lib\site-packages\langgraph\pregel\_runner.py", line 520, in _panic_or_proceed
+    raise exc
+File "C:\Users\atamolsh\Desktop\meeting_agent\.venv\Lib\site-packages\langgraph\pregel\_executor.py", line 80, in done
+    task.result()
+File "C:\Program Files\Python311\Lib\concurrent\futures\_base.py", line 449, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+File "C:\Program Files\Python311\Lib\concurrent\futures\_base.py", line 401, in __get_result
+    raise self._exception
+File "C:\Program Files\Python311\Lib\concurrent\futures\thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+File "C:\Users\atamolsh\Desktop\meeting_agent\.venv\Lib\site-packages\langgraph\pregel\_retry.py", line 126, in run_with_retry
+    return task.proc.invoke(task.input, config)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+File "C:\Users\atamolsh\Desktop\meeting_agent\.venv\Lib\site-packages\langgraph\_internal\_runnable.py", line 656, in invoke
+    input = context.run(step.invoke, input, config, **kwargs)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+File "C:\Users\atamolsh\Desktop\meeting_agent\.venv\Lib\site-packages\langgraph\_internal\_runnable.py", line 400, in invoke
+    ret = self.func(*args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+File "C:\Users\atamolsh\Desktop\meeting_agent\.venv\Lib\site-packages\langgraph\prebuilt\tool_node.py", line 818, in _func
+    outputs = list(
+              ^^^^^
+File "C:\Program Files\Python311\Lib\concurrent\futures\_base.py", line 619, in result_iterator
+    yield _result_or_cancel(fs.pop())
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+File "C:\Program Files\Python311\Lib\concurrent\futures\_base.py", line 317, in _result_or_cancel
+    return fut.result(timeout)
+           ^^^^^^^^^^^^^^^^^^^
+File "C:\Program Files\Python311\Lib\concurrent\futures\_base.py", line 449, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+File "C:\Program Files\Python311\Lib\concurrent\futures\_base.py", line 401, in __get_result
+    raise self._exception
+File "C:\Program Files\Python311\Lib\concurrent\futures\thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+File "C:\Users\atamolsh\Desktop\meeting_agent\.venv\Lib\site-packages\langchain_core\runnables\config.py", line 579, in _wrapped_fn
+    return contexts.pop().run(fn, *args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+File "C:\Users\atamolsh\Desktop\meeting_agent\.venv\Lib\site-packages\langgraph\prebuilt\tool_node.py", line 1031, in _run_one
+    return self._execute_tool_sync(tool_request, input_type, config)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+File "C:\Users\atamolsh\Desktop\meeting_agent\.venv\Lib\site-packages\langgraph\prebuilt\tool_node.py", line 980, in _execute_tool_sync
+    content = _handle_tool_error(e, flag=self._handle_tool_errors)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+File "C:\Users\atamolsh\Desktop\meeting_agent\.venv\Lib\site-packages\langgraph\prebuilt\tool_node.py", line 432, in _handle_tool_error
+    content = flag(e)  # type: ignore [assignment, call-arg]
+              ^^^^^^^
+File "C:\Users\atamolsh\Desktop\meeting_agent\.venv\Lib\site-packages\langgraph\prebuilt\tool_node.py", line 389, in _default_handle_tool_errors
+    raise e
+File "C:\Users\atamolsh\Desktop\meeting_agent\.venv\Lib\site-packages\langgraph\prebuilt\tool_node.py", line 937, in _execute_tool_sync
+    response = tool.invoke(call_args, config)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+File "C:\Users\atamolsh\Desktop\meeting_agent\.venv\Lib\site-packages\langchain_core\tools\base.py", line 642, in invoke
+    return self.run(tool_input, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+File "C:\Users\atamolsh\Desktop\meeting_agent\.venv\Lib\site-packages\langchain_core\tools\base.py", line 1001, in run
+    raise error_to_raise
+File "C:\Users\atamolsh\Desktop\meeting_agent\.venv\Lib\site-packages\langchain_core\tools\base.py", line 967, in run
+    response = context.run(self._run, *tool_args, **tool_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+File "C:\Users\atamolsh\Desktop\meeting_agent\.venv\Lib\site-packages\langchain_core\tools\structured.py", line 97, in _run
+    return self.func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+File "C:\Users\atamolsh\Desktop\meeting_agent\tools.py", line 108, in persist_results
+    tool_call_id = config["invocation_params"]["tool_call_id"]
+                   ~~~~~~^^^^^^^^^^^^^^^^^^^^^
