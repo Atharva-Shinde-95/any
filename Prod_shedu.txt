@@ -1,0 +1,557 @@
+Prod_shedu
+
+data -> in ai -> schedule -> tabular format -> explanation(cost and resources) -> visualization 
+
+Data -> 
+
+
+You are building:
+
+An autonomous production-planning system that can understand arbitrary manufacturing datasets, reason over constraints, and generate an optimal, explainable schedule
+	
+
+This system must:
+✅ Understand unknown Excel structures
+✅ Identify what each table means
+✅ Decide how demand, inventory, routing, machines, and costs interact
+✅ Decide what agent should do what
+✅ Enforce hard feasibility rules
+✅ Optimize mathematically, not narratively
+
+
+
+What Layer‑1 Is (Conceptually)
+Layer‑1 answers only these questions:
+
+What data sources exist?
+What entities are present?
+What does each entity represent?
+How do fields map to universal concepts?
+How confident are we?
+
+
+
+SYSTEM ROLE
+You are an AI system designer and code implementer tasked with building a layered, agentic system using LangChain and LangGraph.
+You MUST strictly follow the architecture, responsibilities, and constraints defined below.
+You are not allowed to invent shortcuts, merge steps, or change responsibilities.
+Failure to follow the structure exactly is considered an error.
+
+GLOBAL GOAL OF THE SYSTEM
+Build an agentic system that:
+
+Accepts CSV / XLSX datasets
+Understands and profiles the data
+Converts data into a canonical internal representation
+Performs multi‑step reasoning and planning using agents
+Produces validated outputs with clear explanations
+
+The system MUST be:
+
+Dataset‑agnostic
+Deterministic where required
+Agentic only where reasoning is required
+Compatible with LangGraph execution semantics
+
+
+STRICT ARCHITECTURAL RULES (DO NOT VIOLATE)
+
+Layers MUST NOT be merged
+Layer 1 and Layer 3 MUST NOT share logic
+Layer 2 MUST have exactly ONE node
+Layer 2 MUST NOT use an LLM
+Layer 2 MUST NOT be a tool owned by any agent
+All planning decisions MUST happen in Layer 3
+Output formatting MUST happen only in Layer 4
+Agents MUST use tools for calculations
+Agents MUST NOT hallucinate values
+Validation MUST be done by a separate critic agent
+
+
+✅ SYSTEM ARCHITECTURE (MANDATORY)
+The system is composed of FOUR LAYERS:
+Layer 1 → Data Understanding
+Layer 2 → Canonical Normalization
+Layer 3 → Agentic Planning
+Layer 4 → Output & Explanation
+
+
+🔵 LAYER 1: DATA UNDERSTANDING (ONE AGENT)
+NODE TYPE
+
+LLM‑based agent
+Can use tools
+Runs ONCE per dataset
+
+
+AGENT NAME
+Agent Data Understanding
+
+INTENT OF THIS AGENT
+INTENT:
+Understand unknown datasets and prepare them for downstream systems.
+This agent exists ONLY to:
+
+Read datasets
+Inspect schema
+Profile data
+Enable querying and semantic understanding
+
+It does NOT make business, planning, or optimization decisions.
+
+RESPONSIBILITIES
+The agent MUST:
+
+Load CSV and XLSX files
+Print dataset shape and column names
+Clean the data (handle missing / invalid values)
+Generate a full data profile:
+
+Row count
+Column count
+Column names
+Data types
+Missing values
+Summary statistics
+
+
+Convert rows into semantic text documents
+Create embeddings and a vector store
+Expose tools to query the dataset
+
+
+TOOLS THIS AGENT USES
+
+Pandas data loading
+Pandas profiling
+Vector database (FAISS or Chroma)
+Embedding model
+Pandas query execution tool
+Semantic search tool
+Data profiling tool
+
+
+HARD BOUNDARIES (DO NOT CROSS)
+The agent MUST NOT:
+
+Perform inventory allocation
+Perform cost calculations
+Perform batching or routing
+Perform scheduling
+Make optimization decisions
+Output final schedules
+
+
+OUTPUT OF LAYER 1
+The agent MUST output structured metadata and prepared data that can be consumed by Layer 2.
+
+🟢 LAYER 2: CANONICAL NORMALIZATION (ONE NODE ONLY)
+NODE TYPE
+
+Deterministic function
+NOT an agent
+NOT an LLM
+ALWAYS executes
+
+
+NODE NAME
+Canonical Normalizer
+
+INTENT OF THIS NODE
+INTENT:
+Convert interpreted data into a stable, universal internal model.
+This node exists to eliminate dataset variability.
+
+RESPONSIBILITIES
+This node MUST:
+
+Accept structured outputs from Layer 1
+Apply schema mappings
+Convert data types and units
+Enforce invariants and validations
+Construct canonical objects such as:
+
+Demand events
+Inventory records
+Routing definitions
+Machine definitions
+Cost parameters
+
+
+Produce a single canonical state object
+
+
+HARD BOUNDARIES (DO NOT CROSS)
+This node MUST NOT:
+
+Use an LLM
+Make decisions
+Perform optimization
+Perform scheduling
+Perform validation judgments
+
+
+🟣 LAYER 3: AGENTIC PLANNING (5 AGENTS)
+Layer 3 is where all reasoning, trade‑offs, and optimization happens.
+Each agent below has a narrow intent and MUST NOT absorb other responsibilities.
+
+AGENT 1: Demand and Inventory Feasibility
+INTENT
+Determine whether demand can be satisfied using inventory and compute net production needs.
+RESPONSIBILITIES
+
+Check feasibility of demands
+Allocate inventory using FIFO
+Handle expiry rules
+Compute net production quantity
+Flag infeasible situations
+
+TOOLS USED
+
+Inventory allocation tools
+FIFO computation
+Date comparison utilities
+
+
+AGENT 2: Quantity and Economic Planning
+INTENT
+Decide how production quantities should be grouped based on cost trade‑offs.
+RESPONSIBILITIES
+
+Consume net production quantities
+Compute holding cost
+Compute setup cost
+Decide split vs consolidate
+Output batch plans
+
+TOOLS USED
+
+Cost calculation tools
+Date difference calculators
+
+
+AGENT 3: Routing and Capacity Planning
+INTENT
+Ensure physical feasibility of production.
+RESPONSIBILITIES
+
+Enforce full routing sequences
+Assign machines
+Calculate operation durations
+Respect machine capacities and shifts
+Insert setup/changeover times
+
+TOOLS USED
+
+Capacity computation tools
+Shift splitting utilities
+Routing enforcement logic
+
+
+AGENT 4: Backward Scheduling
+INTENT
+Determine exact timing of operations.
+RESPONSIBILITIES
+
+Schedule operations backward from delivery dates
+Respect shift calendars
+Minimize early production
+Produce time‑stamped schedules
+
+TOOLS USED
+
+Calendar math tools
+Time placement utilities
+
+
+AGENT 5: Schedule Validation (CRITIC)
+INTENT
+Act as an independent reviewer and repair controller.
+RESPONSIBILITIES
+
+Detect late deliveries
+Detect missing routing steps
+Detect capacity violations
+Classify issues:
+
+Scheduling issue
+Routing issue
+Data issue
+
+
+Route control back to the correct agent
+
+TOOLS USED
+
+Constraint validation tools
+Rule checkers
+
+
+🟠 LAYER 4: OUTPUT AND EXPLANATION (ONE AGENT)
+AGENT NAME
+Agent Output Formatter
+
+INTENT
+INTENT:
+Present results clearly without altering decisions.
+
+RESPONSIBILITIES
+
+Convert schedule into strict JSON
+Produce human‑readable tables
+Explain decisions made in Layer 3
+Summarize optimization logic
+
+
+HARD BOUNDARIES
+The agent MUST NOT:
+
+Modify schedules
+Re‑optimize
+Perform validation
+Call planning agents
+
+
+✅ LANGGRAPH CONTROL FLOW (MANDATORY)
+The LangGraph MUST follow this order:
+Data Understanding Agent
+        ↓
+Canonical Normalizer
+        ↓
+Demand & Inventory Feasibility
+        ↓
+Quantity & Economic Planning
+        ↓
+Routing & Capacity Planning
+        ↓
+Backward Scheduling
+        ↓
+Schedule Validation
+        ↓
+(if valid) Output Formatter
+(if not valid) route back appropriately
+
+Rework loops are ONLY controlled by Schedule Validation Agent.
+
+✅ FINAL COMPLIANCE CHECK
+Before finishing, verify:
+
+✅ Exactly 7 agents
+✅ Exactly 1 normalization node
+✅ No agent performs another agent’s job
+✅ Tools are used for all calculations
+✅ LLMs never compute numbers
+✅ Dataset understanding is isolated
+
+
+END OF SYSTEM PROMPT
+
+✅ Final Note
+This prompt is intentionally strict, repetitive, and explicit so that even a weak model:
+
+Cannot merge layers incorrectly
+Cannot hallucinate responsibilities
+Cannot bypass validation
+Cannot misuse tools
+
+If you want next, I can:
+
+Simplify this prompt for a stronger model, or
+Turn this into multiple smaller prompts per layer, or
+Validate a generated implementation against this prompt
+
+Just tell me.
+Provide your feedback on BizChatYou said: do all the data between agents passes through state memoryCopilot said: CopilotShort answer: Yes, all data exchanged between agents flows through the shared LangGraph state memory — but not all data is the same kind of “memory”.
+Let me explain this precisely, because this is a fundamental LangGraph concept and easy to misunderstand.
+
+✅ Canonical Answer
+
+All agents in your system communicate only via the LangGraph state.
+Agents do NOT pass data directly to each other.
+
+However:
+
+State memory ≠ conversational memory
+State memory ≠ long‑term storage
+State memory is structured, explicit, and controlled
+
+
+1️⃣ What “State Memory” Means in LangGraph (Important)
+In LangGraph, there is one shared state object that:
+
+Is passed into every node
+Is returned out of every node
+Is the only communication channel between nodes
+
+So yes:
+✅ Every agent reads from state
+✅ Every agent writes to state
+✅ No agent talks to another agent directly
+This is by design, not accidental.
+
+2️⃣ What Kind of Data Flows Through State
+The state contains structured fields, for example:
+Plain Textstate = {  raw_data,  data_profile,  canonical_model,  inventory_allocation,  batch_plan,  routing_plan,  schedule,  validation_result,  final_output}Show more lines
+✅ Agents append or update specific fields
+✅ Agents must not overwrite unrelated fields
+✅ Validation agent decides routing based on state content
+
+3️⃣ What Does NOT Flow Through State Automatically
+This is critical.
+❌ Not automatic internal thoughts
+
+LLM chain‑of‑thought
+Agent reasoning scratchpads
+Tool internal logs
+
+These remain inside the agent invocation, not in state.
+
+❌ Not “agent memory” unless you explicitly store it
+Conversation history, summaries, or reasoning only appear in state if you explicitly write them there.
+
+4️⃣ Distinguish These Three Concepts (Very Important)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ConceptWhat it isYour systemLangGraph StateStructured shared data✅ YESConversational memoryChat history❌ OptionalLong‑term memoryVector / DB / files❌ Separate system
+Your design intentionally uses ONLY state for agent coordination.
+That is correct and clean.
+
+5️⃣ Layer‑by‑Layer State Flow (Your Architecture)
+🔵 Layer 1 → State
+
+Writes:
+
+Cleaned dataframe
+Data profile
+Semantic indexes
+
+
+Reads:
+
+Dataset path / user intent
+
+
+
+✅ Output written fully to state
+
+🟢 Layer 2 → State
+
+Reads:
+
+Layer 1 metadata
+
+
+Writes:
+
+canonical_model
+
+
+
+✅ Overwrites nothing else
+
+🟣 Layer 3 → State (Agentic Planning)
+Each agent:
+
+Reads only what it needs
+Writes only its outputs
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+AgentReadsWritesFeasibilitycanonical_modelinventory_stateEcon Planninginventory_statebatch_planRoutingbatch_planrouting_planSchedulingrouting_planscheduleValidationschedulevalidation_result
+✅ Clean, traceable, auditable
+
+🟠 Layer 4 → State
+
+Reads:
+
+Final schedule
+Decisions
+
+
+Writes:
+
+Final formatted output
+
+
+
+✅ End of lifecycle
+
+6️⃣ Why This Design Is Correct for Agentic Systems
+This ensures:
+✅ Determinism
+✅ Debuggability
+✅ Reproducibility
+✅ Proper validation loops
+✅ No hidden side effects
+It is exactly how serious agentic systems are built.
+
+7️⃣ Very Common Mistake (You Avoided It)
+❌ Letting agents call each other directly
+❌ Passing Python objects outside state
+❌ Having invisible side effects
+Your design avoids all of these.
+
+✅ Final, Unambiguous Answer
+Yes, all data exchanged between agents in your system must pass through the shared LangGraph state memory.
+But:
+
+It must be explicit
+It must be structured
+It must be purpose‑limited
+It must not include agent internals unless you choose
