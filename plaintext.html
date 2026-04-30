@@ -1,0 +1,995 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agentic Scheduling Framework</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Clash+Display:wght@400;600;700&family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #06080f;
+  --surface: #0d1117;
+  --surface2: #131920;
+  --border: #1c2333;
+  --border2: #243049;
+  --cyan: #00d4ff;
+  --orange: #ff6b35;
+  --green: #00e676;
+  --purple: #b388ff;
+  --yellow: #ffd740;
+  --red: #ff5252;
+  --text: #cdd9f0;
+  --muted: #4a5a7a;
+  --muted2: #6b7fa0;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Outfit', sans-serif;
+  min-height: 100vh;
+  padding: 0;
+  overflow-x: hidden;
+}
+
+/* NAV TABS */
+.nav {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(6,8,15,0.95);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding: 0 32px;
+}
+.nav-brand {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: var(--cyan);
+  letter-spacing: 2px;
+  padding: 16px 24px 16px 0;
+  border-right: 1px solid var(--border);
+  margin-right: 24px;
+  white-space: nowrap;
+}
+.nav-tab {
+  padding: 16px 20px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted2);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.nav-tab:hover { color: var(--text); }
+.nav-tab.active { color: var(--cyan); border-bottom-color: var(--cyan); }
+
+/* PAGES */
+.page { display: none; padding: 40px 32px 60px; max-width: 1400px; margin: 0 auto; }
+.page.active { display: block; }
+
+/* PAGE HEADER */
+.page-header { margin-bottom: 40px; }
+.page-eyebrow {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 3px;
+  color: var(--orange);
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.page-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  margin-bottom: 8px;
+}
+.page-title span { color: var(--cyan); }
+.page-sub {
+  font-size: 13px;
+  color: var(--muted2);
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* ==================== ARCHITECTURE PAGE ==================== */
+
+/* ZONE LAYOUT */
+.arch-layout {
+  display: grid;
+  grid-template-rows: auto auto auto auto auto;
+  gap: 2px;
+}
+
+.arch-zone {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px 24px;
+  position: relative;
+  background: var(--surface);
+}
+
+.zone-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.zone-label .dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.zone-data { border-color: #1a3050; }
+.zone-data .zone-label { color: var(--cyan); }
+.zone-data .dot { background: var(--cyan); }
+
+.zone-rule { border-color: #2a1f40; }
+.zone-rule .zone-label { color: var(--purple); }
+.zone-rule .dot { background: var(--purple); }
+
+.zone-solver { border-color: #1f3530; background: #0a1510; border-width: 2px; }
+.zone-solver .zone-label { color: var(--green); }
+.zone-solver .dot { background: var(--green); }
+
+.zone-human { border-color: #2a2010; }
+.zone-human .zone-label { color: var(--yellow); }
+.zone-human .dot { background: var(--yellow); }
+
+.zone-output { border-color: #301a1a; }
+.zone-output .zone-label { color: var(--orange); }
+.zone-output .dot { background: var(--orange); }
+
+/* AGENT CHIPS IN ZONES */
+.agent-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.agent-chip {
+  display: flex;
+  flex-direction: column;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  padding: 8px 12px;
+  min-width: 140px;
+  cursor: default;
+  transition: all 0.2s;
+  position: relative;
+}
+.agent-chip:hover {
+  border-color: var(--cyan);
+  transform: translateY(-2px);
+  z-index: 2;
+}
+.agent-chip:hover .agent-tooltip { display: block; }
+
+.chip-name {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  margin-bottom: 2px;
+}
+.chip-desc { font-size: 10px; color: var(--muted2); line-height: 1.3; }
+
+.chip-data .chip-name { color: var(--cyan); }
+.chip-rule .chip-name { color: var(--purple); }
+.chip-solver .chip-name { color: var(--green); }
+.chip-human .chip-name { color: var(--yellow); }
+.chip-output .chip-name { color: var(--orange); }
+
+.chip-arrow {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 16px;
+  color: var(--muted);
+  padding: 0 4px;
+  flex-shrink: 0;
+  align-self: center;
+}
+
+/* CENTER SOLVER BLOCK */
+.solver-center {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 16px;
+  align-items: center;
+}
+.solver-inputs, .solver-outputs {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.solver-main-block {
+  background: linear-gradient(135deg, #0a1f10, #0d2a18);
+  border: 2px solid var(--green);
+  border-radius: 12px;
+  padding: 20px 24px;
+  text-align: center;
+  box-shadow: 0 0 30px rgba(0,230,118,0.1);
+  min-width: 200px;
+}
+.solver-main-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--green);
+  letter-spacing: 2px;
+  margin-bottom: 8px;
+}
+.solver-main-name {
+  font-size: 18px;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 6px;
+}
+.solver-main-sub {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  color: var(--muted2);
+  letter-spacing: 1px;
+}
+.solver-swap-badge {
+  margin-top: 10px;
+  background: rgba(0,230,118,0.1);
+  border: 1px solid rgba(0,230,118,0.3);
+  border-radius: 4px;
+  padding: 3px 8px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  color: var(--green);
+  display: inline-block;
+}
+
+.mini-chip {
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+.mini-chip-label { color: var(--muted2); }
+.mini-chip-val { font-weight: 700; }
+.mini-chip-val.cyan { color: var(--cyan); }
+.mini-chip-val.purple { color: var(--purple); }
+.mini-chip-val.yellow { color: var(--yellow); }
+.mini-chip-val.orange { color: var(--orange); }
+
+.zone-arrow-down {
+  text-align: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 20px;
+  color: var(--muted);
+  padding: 6px 0;
+  letter-spacing: 40px;
+}
+
+/* ==================== FUNCTIONAL FLOW PAGE ==================== */
+
+.flow-section { margin-bottom: 36px; }
+.flow-section-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.flow-section-title::after { content:''; flex:1; height:1px; background: var(--border); }
+
+.fflow {
+  display: flex;
+  align-items: stretch;
+  flex-wrap: wrap;
+  gap: 0;
+  margin-bottom: 8px;
+}
+
+.fnode {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  padding: 10px 14px;
+  min-width: 120px;
+}
+.fnode-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  margin-bottom: 3px;
+}
+.fnode-sub { font-size: 10px; color: var(--muted2); line-height: 1.3; }
+
+.fnode.source { border-color: var(--cyan); }
+.fnode.source .fnode-label { color: var(--cyan); }
+.fnode.rule { border-color: var(--purple); }
+.fnode.rule .fnode-label { color: var(--purple); }
+.fnode.solve { border-color: var(--green); }
+.fnode.solve .fnode-label { color: var(--green); }
+.fnode.human { border-color: var(--yellow); }
+.fnode.human .fnode-label { color: var(--yellow); }
+.fnode.output { border-color: var(--orange); }
+.fnode.output .fnode-label { color: var(--orange); }
+.fnode.kpi { border-color: var(--red); }
+.fnode.kpi .fnode-label { color: var(--red); }
+
+.farrow {
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 18px;
+  color: var(--muted);
+  flex-shrink: 0;
+}
+
+.branch-note {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--muted2);
+  padding: 4px 0 4px 16px;
+  border-left: 2px solid var(--border2);
+  margin: 4px 0 4px 60px;
+}
+.branch-note span { color: var(--yellow); }
+
+/* ==================== TECHNICAL PAGE ==================== */
+
+.tech-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.tech-card {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 10px;
+  padding: 18px 20px;
+}
+.tech-card-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.tech-card-title .dot { width:6px;height:6px;border-radius:50%;flex-shrink:0; }
+
+.tech-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+}
+.tech-row:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+.tech-key {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  min-width: 100px;
+  flex-shrink: 0;
+}
+.tech-val { font-size: 12px; color: var(--muted2); line-height: 1.5; }
+.tech-val strong { color: var(--text); font-weight: 600; }
+
+.storage-arch {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+.storage-block {
+  flex: 1;
+  min-width: 200px;
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.storage-header {
+  padding: 10px 16px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.storage-body { padding: 12px 16px; font-size: 11px; color: var(--muted2); line-height: 1.8; }
+.storage-block.redis .storage-header { background: rgba(255,82,82,0.08); color: var(--red); border-bottom: 1px solid rgba(255,82,82,0.2); }
+.storage-block.mongo .storage-header { background: rgba(0,230,118,0.08); color: var(--green); border-bottom: 1px solid rgba(0,230,118,0.2); }
+
+.badge-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; }
+.badge {
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 20px;
+  padding: 5px 12px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.badge .bdot { width:5px;height:5px;border-radius:50%;flex-shrink:0; }
+
+.solver-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 24px;
+  font-size: 12px;
+}
+.solver-table th {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: var(--muted2);
+  text-align: left;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border2);
+  text-transform: uppercase;
+}
+.solver-table td {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+  color: var(--muted2);
+  line-height: 1.5;
+}
+.solver-table td:first-child {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--green);
+}
+.solver-table tr:last-child td { border-bottom: none; }
+.swap-note {
+  background: rgba(0,212,255,0.05);
+  border: 1px solid rgba(0,212,255,0.2);
+  border-radius: 8px;
+  padding: 14px 18px;
+  font-size: 12px;
+  color: var(--muted2);
+  line-height: 1.6;
+  margin-bottom: 24px;
+}
+.swap-note strong { color: var(--cyan); }
+
+/* conflict section */
+.conflict-flow {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.cnode {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  padding: 10px 14px;
+}
+.cnode-t { font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700; margin-bottom: 2px; }
+.cnode-s { font-size: 10px; color: var(--muted2); }
+.cnode.c1 .cnode-t { color: var(--red); }
+.cnode.c2 .cnode-t { color: var(--purple); }
+.cnode.c3 .cnode-t { color: var(--yellow); }
+.cnode.c4 .cnode-t { color: var(--green); }
+.cnode.c5 .cnode-t { color: var(--cyan); }
+
+.option-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+.option-card {
+  flex: 1;
+  min-width: 160px;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  padding: 12px;
+}
+.opt-num { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--muted2); margin-bottom: 4px; }
+.opt-title { font-size: 12px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+.opt-impact { font-size: 10px; color: var(--orange); font-family: 'JetBrains Mono', monospace; }
+
+footer {
+  border-top: 1px solid var(--border);
+  padding: 20px 32px;
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+}
+
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+.live-dot { width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;display:inline-block;margin-right:4px; }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-brand">ASF · v2.0</div>
+  <div class="nav-tab active" onclick="showPage('arch')">① Architecture</div>
+  <div class="nav-tab" onclick="showPage('func')">② Functional Flow</div>
+  <div class="nav-tab" onclick="showPage('tech')">③ Technical Design</div>
+  <div class="nav-tab" onclick="showPage('conflict')">④ Conflict Resolution</div>
+</nav>
+
+<!-- ===================== PAGE 1: ARCHITECTURE ===================== -->
+<div class="page active" id="page-arch">
+  <div class="page-header">
+    <div class="page-eyebrow">Agentic Scheduling Framework · Domain-Agnostic</div>
+    <div class="page-title">Architecture <span>Overview</span></div>
+    <div class="page-sub">15 agents · CP-SAT solver (swappable) · MCP data contract · LangGraph orchestration</div>
+  </div>
+
+  <div class="arch-layout">
+
+    <!-- ZONE 1: DATA -->
+    <div class="arch-zone zone-data">
+      <div class="zone-label"><span class="dot"></span> ZONE 1 · DATA INGESTION & UNDERSTANDING</div>
+      <div class="agent-row">
+        <div class="agent-chip chip-data">
+          <div class="chip-name">DataIngestionAgent</div>
+          <div class="chip-desc">Pull from DB / CSV / API / MCP. Normalize to unified schema.</div>
+        </div>
+        <div class="chip-arrow">›</div>
+        <div class="agent-chip chip-data">
+          <div class="chip-name">SchemaUnderstanderAgent</div>
+          <div class="chip-desc">Auto-detect entities. User confirms via low-code field mapper UI.</div>
+        </div>
+        <div class="chip-arrow">›</div>
+        <div class="agent-chip chip-data" style="border-color:var(--cyan); background: rgba(0,212,255,0.05);">
+          <div class="chip-name">Unified Entity Map</div>
+          <div class="chip-desc">Jobs · Machines · Workers · Time · Capacity · Domain-agnostic</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="zone-arrow-down">↓ ↓ ↓</div>
+
+    <!-- ZONE 2: RULE -->
+    <div class="arch-zone zone-rule">
+      <div class="zone-label"><span class="dot"></span> ZONE 2 · RULE EXTRACTION & CONSTRAINT BUILDING</div>
+      <div class="agent-row">
+        <div class="agent-chip chip-rule">
+          <div class="chip-name">RuleInterpreterAgent</div>
+          <div class="chip-desc">NL / Form / Doc → structured rule intent</div>
+        </div>
+        <div class="chip-arrow">›</div>
+        <div class="agent-chip chip-rule">
+          <div class="chip-name">ConstraintClassifierAgent</div>
+          <div class="chip-desc">Tags: Hard / Soft / Derived from data understanding</div>
+        </div>
+        <div class="chip-arrow">›</div>
+        <div class="agent-chip chip-rule">
+          <div class="chip-name">RuleValidatorAgent</div>
+          <div class="chip-desc">Conflict detect → 3 options with trade-off → user picks</div>
+        </div>
+        <div class="chip-arrow">›</div>
+        <div class="agent-chip chip-rule" style="border-color:var(--purple); background:rgba(179,136,255,0.05);">
+          <div class="chip-name">Constraint Registry</div>
+          <div class="chip-desc">MongoDB (source of truth) + Redis (solver working memory)</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="zone-arrow-down">↓ ↓ ↓</div>
+
+    <!-- ZONE 3: SOLVER (CENTER) -->
+    <div class="arch-zone zone-solver">
+      <div class="zone-label"><span class="dot"></span> ZONE 3 · SOLVER CORE — CENTER BLOCK</div>
+      <div class="solver-center">
+        <div class="solver-inputs">
+          <div class="mini-chip"><span class="mini-chip-label">Constraint Registry</span><span class="mini-chip-val purple">→</span></div>
+          <div class="mini-chip"><span class="mini-chip-label">Entity Map</span><span class="mini-chip-val cyan">→</span></div>
+          <div class="mini-chip"><span class="mini-chip-label">KPI Definitions</span><span class="mini-chip-val yellow">→</span></div>
+          <div class="mini-chip"><span class="mini-chip-label">Feedback / Overrides</span><span class="mini-chip-val orange">→</span></div>
+        </div>
+        <div class="solver-main-block">
+          <div class="solver-main-title">SOLVER ORCHESTRATOR</div>
+          <div class="solver-main-name">CP-SAT</div>
+          <div class="solver-main-sub">OR-TOOLS · EXACT OPTIMIZATION</div>
+          <div class="solver-swap-badge">⇄ SOLVER SWAPPABLE</div>
+          <div style="margin-top:12px; display:flex; flex-direction:column; gap:4px;">
+            <div class="agent-chip chip-solver" style="text-align:left; min-width:unset;">
+              <div class="chip-name">SolverSelectorAgent</div>
+              <div class="chip-desc">Picks solver by problem size + constraint mix</div>
+            </div>
+            <div class="agent-chip chip-solver" style="text-align:left; min-width:unset;">
+              <div class="chip-name">SolverOrchestratorAgent</div>
+              <div class="chip-desc">Runs solver, timeout, fallback strategy</div>
+            </div>
+          </div>
+        </div>
+        <div class="solver-outputs">
+          <div class="mini-chip"><span class="mini-chip-val green">→</span><span class="mini-chip-label">Optimized Plan</span></div>
+          <div class="mini-chip"><span class="mini-chip-val cyan">→</span><span class="mini-chip-label">NL Explanations</span></div>
+          <div class="mini-chip"><span class="mini-chip-val yellow">→</span><span class="mini-chip-label">KPI Results</span></div>
+          <div class="mini-chip"><span class="mini-chip-val orange">→</span><span class="mini-chip-label">Scenario Rankings</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="zone-arrow-down">↓ ↓ ↓</div>
+
+    <!-- ZONE 4: HUMAN + KPI + WHATIF -->
+    <div class="arch-zone zone-human">
+      <div class="zone-label"><span class="dot"></span> ZONE 4 · KPI VALIDATION · WHAT-IF · HUMAN IN LOOP</div>
+      <div class="agent-row">
+        <div class="agent-chip chip-human">
+          <div class="chip-name">PlanExplainerAgent</div>
+          <div class="chip-desc">NL reason per scheduling decision</div>
+        </div>
+        <div class="chip-arrow">›</div>
+        <div class="agent-chip chip-human">
+          <div class="chip-name">KPIEvaluatorAgent</div>
+          <div class="chip-desc">Compute user-defined metrics. Is this solution optimal?</div>
+        </div>
+        <div class="chip-arrow">›</div>
+        <div class="agent-chip chip-human">
+          <div class="chip-name">WhatIfSandboxAgent</div>
+          <div class="chip-desc">Clone state, freeze segments, inject new scenario</div>
+        </div>
+        <div class="chip-arrow">›</div>
+        <div class="agent-chip chip-human">
+          <div class="chip-name">ScenarioComparatorAgent</div>
+          <div class="chip-desc">KPI diff across scenarios side-by-side</div>
+        </div>
+        <div class="chip-arrow">›</div>
+        <div class="agent-chip chip-human">
+          <div class="chip-name">AutoRankerAgent</div>
+          <div class="chip-desc">Rank by user KPI weights, suggest best</div>
+        </div>
+        <div class="chip-arrow">›</div>
+        <div class="agent-chip chip-human">
+          <div class="chip-name">FeedbackAgent</div>
+          <div class="chip-desc">Human override → updates Registry → re-triggers solve</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="zone-arrow-down">↓</div>
+
+    <!-- ZONE 5: LIVE / OUTPUT -->
+    <div class="arch-zone zone-output">
+      <div class="zone-label"><span class="dot"></span> ZONE 5 · LIVE DISRUPTION & DYNAMIC RE-SCHEDULING</div>
+      <div class="agent-row">
+        <div class="agent-chip chip-output">
+          <div class="chip-name">DisruptionDetectorAgent</div>
+          <div class="chip-desc"><span class="live-dot"></span>Classify live signal: delay / breakdown / absence</div>
+        </div>
+        <div class="chip-arrow">›</div>
+        <div class="agent-chip chip-output">
+          <div class="chip-name">ReOptimizerAgent</div>
+          <div class="chip-desc">Partial re-solve affected segments, freeze rest</div>
+        </div>
+        <div class="chip-arrow">›</div>
+        <div class="agent-chip chip-output" style="border-color:var(--orange); background:rgba(255,107,53,0.05);">
+          <div class="chip-name">Delta Plan</div>
+          <div class="chip-desc">Only changes shown to user. Full plan preserved in history.</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ===================== PAGE 2: FUNCTIONAL FLOW ===================== -->
+<div class="page" id="page-func">
+  <div class="page-header">
+    <div class="page-eyebrow">Step-by-step · What happens and when</div>
+    <div class="page-title">Functional <span>Flow</span></div>
+    <div class="page-sub">User perspective · Business logic · Decision points</div>
+  </div>
+
+  <!-- F1: DATA -->
+  <div class="flow-section">
+    <div class="flow-section-title" style="color:var(--cyan)">① DATA INTAKE</div>
+    <div class="fflow">
+      <div class="fnode source"><div class="fnode-label">Source Connect</div><div class="fnode-sub">DB / CSV / API / MCP standard</div></div>
+      <div class="farrow">›</div>
+      <div class="fnode source"><div class="fnode-label">DataIngestionAgent</div><div class="fnode-sub">Pull, normalize, timestamp</div></div>
+      <div class="farrow">›</div>
+      <div class="fnode source"><div class="fnode-label">Low-Code Field Mapper</div><div class="fnode-sub">User maps fields to entities via UI</div></div>
+      <div class="farrow">›</div>
+      <div class="fnode source"><div class="fnode-label">SchemaUnderstanderAgent</div><div class="fnode-sub">Validates map, infers missing, confirms</div></div>
+      <div class="farrow">›</div>
+      <div class="fnode source"><div class="fnode-label">Unified Entity Map</div><div class="fnode-sub">Domain-agnostic internal model</div></div>
+    </div>
+  </div>
+
+  <!-- F2: RULES -->
+  <div class="flow-section">
+    <div class="flow-section-title" style="color:var(--purple)">② RULE DEFINITION</div>
+    <div class="fflow">
+      <div class="fnode rule"><div class="fnode-label">User Input</div><div class="fnode-sub">NL chat / Form builder / Upload doc</div></div>
+      <div class="farrow">›</div>
+      <div class="fnode rule"><div class="fnode-label">RuleInterpreterAgent</div><div class="fnode-sub">Extract intent, entities, conditions</div></div>
+      <div class="farrow">›</div>
+      <div class="fnode rule"><div class="fnode-label">ConstraintClassifierAgent</div><div class="fnode-sub">Hard / Soft / Derived tagging</div></div>
+      <div class="farrow">›</div>
+      <div class="fnode rule"><div class="fnode-label">RuleValidatorAgent</div><div class="fnode-sub">Conflict check across all rules</div></div>
+      <div class="farrow">›</div>
+      <div class="fnode rule"><div class="fnode-label">Constraint Registry</div><div class="fnode-sub">Versioned, active, ready for solver</div></div>
+    </div>
+    <div class="branch-note">⤷ Conflict found? <span>→ Agent explains WHY → Suggests 3 options with impact → User picks → Registry updated</span></div>
+  </div>
+
+  <!-- F3: SOLVE -->
+  <div class="flow-section">
+    <div class="flow-section-title" style="color:var(--green)">③ PLAN GENERATION</div>
+    <div class="fflow">
+      <div class="fnode solve"><div class="fnode-label">SolverSelectorAgent</div><div class="fnode-sub">Assess problem size + constraint mix</div></div>
+      <div class="farrow">›</div>
+      <div class="fnode solve"><div class="fnode-label">CP-SAT Solver</div><div class="fnode-sub">OR-Tools exact optimization (swappable)</div></div>
+      <div class="farrow">›</div>
+      <div class="fnode solve"><div class="fnode-label">PlanExplainerAgent</div><div class="fnode-sub">NL reason per scheduling decision</div></div>
+      <div class="farrow">›</div>
+      <div class="fnode solve"><div class="fnode-label">KPIEvaluatorAgent</div><div class="fnode-sub">Is this plan optimal? Score against user KPIs</div></div>
+      <div class="farrow">›</div>
+      <div class="fnode solve"><div class="fnode-label">Optimized Plan</div><div class="fnode-sub">With scores, reasons, KPI breakdown</div></div>
+    </div>
+    <div class="branch-note">⤷ Not optimal? <span>→ Agent flags which constraints are limiting → User can relax soft constraints → Re-solve triggered</span></div>
+  </div>
+
+  <!-- F4: HUMAN -->
+  <div class="flow-section">
+    <div class="flow-section-title" style="color:var(--yellow)">④ HUMAN VALIDATION & WHAT-IF</div>
+    <div class="fflow">
+      <div class="fnode human"><div class="fnode-label">Human Reviews Plan</div><div class="fnode-sub">Validate, query, override decisions</div></div>
+      <div class="farrow">›</div>
+      <div class="fnode human"><div class="fnode-label">What-If Scenario</div><div class="fnode-sub">Define changes, freeze segments</div></div>
+      <div class="farrow">›</div>
+      <div class="fnode human"><div class="fnode-label">WhatIfSandboxAgent</div><div class="fnode-sub">Isolated clone in Redis namespace</div></div>
+      <div class="farrow">›</div>
+      <div class="fnode human"><div class="fnode-label">ScenarioComparatorAgent</div><div class="fnode-sub">KPI diff side-by-side</div></div>
+      <div class="farrow">›</div>
+      <div class="fnode human"><div class="fnode-label">AutoRankerAgent</div><div class="fnode-sub">Best scenario suggested</div></div>
+    </div>
+    <div class="branch-note">⤷ Override? <span>→ FeedbackAgent captures change → Constraint Registry updated → Partial re-solve triggered</span></div>
+  </div>
+
+  <!-- F5: LIVE -->
+  <div class="flow-section">
+    <div class="flow-section-title" style="color:var(--orange)">⑤ LIVE DISRUPTION HANDLING</div>
+    <div class="fflow">
+      <div class="fnode output"><div class="fnode-label"><span class="live-dot"></span>Live Signal</div><div class="fnode-sub">Machine breakdown / delay / absent worker</div></div>
+      <div class="farrow">›</div>
+      <div class="fnode output"><div class="fnode-label">DisruptionDetectorAgent</div><div class="fnode-sub">Classify severity: critical / moderate / minor</div></div>
+      <div class="farrow">›</div>
+      <div class="fnode output"><div class="fnode-label">ReOptimizerAgent</div><div class="fnode-sub">Freeze unaffected, re-solve affected only</div></div>
+      <div class="farrow">›</div>
+      <div class="fnode output"><div class="fnode-label">KPIEvaluatorAgent</div><div class="fnode-sub">Re-score updated plan</div></div>
+      <div class="farrow">›</div>
+      <div class="fnode output"><div class="fnode-label">Delta Plan</div><div class="fnode-sub">Only changes surfaced to user</div></div>
+    </div>
+    <div class="branch-note">⤷ Critical disruption? <span>→ Human notified immediately → Can override delta → FeedbackAgent logs decision</span></div>
+  </div>
+
+</div>
+
+<!-- ===================== PAGE 3: TECHNICAL ===================== -->
+<div class="page" id="page-tech">
+  <div class="page-header">
+    <div class="page-eyebrow">Implementation · Stack · Storage · Solver</div>
+    <div class="page-title">Technical <span>Design</span></div>
+    <div class="page-sub">Framework choices, storage architecture, solver strategy, domain-agnostic design</div>
+  </div>
+
+  <!-- SOLVER SWAPPABLE -->
+  <div style="margin-bottom:24px;">
+    <div class="flow-section-title" style="color:var(--green); margin-bottom:14px;">SOLVER STRATEGY · SWAPPABLE DESIGN</div>
+    <div class="swap-note">
+      <strong>Design principle:</strong> SolverOrchestratorAgent wraps the solver behind a standard interface. Swapping CP-SAT for another solver requires only changing the <strong>solver adapter</strong> — all agents, constraint formats, and KPI logic remain identical. The constraint registry outputs a <strong>solver-agnostic constraint object</strong> that each adapter translates to its native format.
+    </div>
+    <table class="solver-table">
+      <thead><tr><th>Solver</th><th>Best For</th><th>When to Swap</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td>CP-SAT (OR-Tools)</td><td>Hard constraints, exact scheduling, integer problems</td><td>Manufacturing, shift planning, job-shop</td><td style="color:var(--green); font-family:'JetBrains Mono',monospace; font-size:10px;">● ACTIVE</td></tr>
+        <tr><td>Optuna / DEAP</td><td>Large search space, soft constraint tuning, heuristic</td><td>When CP-SAT times out on huge problems</td><td style="color:var(--muted2); font-family:'JetBrains Mono',monospace; font-size:10px;">○ AVAILABLE</td></tr>
+        <tr><td>SimPy</td><td>Discrete event simulation, disruption modeling</td><td>Future scenario simulation, what-if at scale</td><td style="color:var(--muted2); font-family:'JetBrains Mono',monospace; font-size:10px;">○ AVAILABLE</td></tr>
+        <tr><td>Custom / Domain</td><td>Industry-specific heuristics</td><td>Healthcare rostering, airline crew scheduling</td><td style="color:var(--muted2); font-family:'JetBrains Mono',monospace; font-size:10px;">○ PLUGGABLE</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- STORAGE -->
+  <div style="margin-bottom:24px;">
+    <div class="flow-section-title" style="color:var(--red); margin-bottom:14px;">STORAGE ARCHITECTURE</div>
+    <div class="storage-arch">
+      <div class="storage-block redis">
+        <div class="storage-header">Redis <span style="font-size:9px;color:var(--muted2);">HOT LAYER</span></div>
+        <div class="storage-body">
+          · Active constraints (solver reads live)<br>
+          · What-if scenario namespaces (isolated)<br>
+          · LangGraph working state<br>
+          · Evicted on scenario close / plan commit<br>
+          · Write-through from MongoDB on plan trigger
+        </div>
+      </div>
+      <div class="storage-block mongo">
+        <div class="storage-header">MongoDB <span style="font-size:9px;color:var(--muted2);">SOURCE OF TRUTH</span></div>
+        <div class="storage-body">
+          · Full constraint registry (versioned)<br>
+          · All rules: NL source + classified form<br>
+          · Plan history + feedback log<br>
+          · KPI definitions + results history<br>
+          · Conflict resolution audit trail
+        </div>
+      </div>
+    </div>
+    <div style="font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--muted2); padding: 10px 0;">
+      Write path: User/Agent → MongoDB → sync to Redis &nbsp;|&nbsp; Read path: Solver → Redis only &nbsp;|&nbsp; What-If: Redis namespace clone (never touches MongoDB until committed)
+    </div>
+  </div>
+
+  <!-- TECH STACK -->
+  <div style="margin-bottom:24px;">
+    <div class="flow-section-title" style="color:var(--cyan); margin-bottom:14px;">TECH STACK</div>
+    <div class="tech-grid">
+      <div class="tech-card">
+        <div class="tech-card-title" style="color:var(--cyan);"><span class="dot" style="background:var(--cyan)"></span>Orchestration</div>
+        <div class="tech-row"><div class="tech-key" style="color:var(--cyan)">LangGraph</div><div class="tech-val">Graph-based agent transitions. Deterministic flow control. Human-in-loop nodes built-in. State shared across all agents via GlobalScheduleState.</div></div>
+        <div class="tech-row"><div class="tech-key" style="color:var(--cyan)">Why not AutoGen</div><div class="tech-val">Our pipeline is structured, not open-ended negotiation. LangGraph gives explicit control over transitions — critical for scheduling correctness.</div></div>
+      </div>
+      <div class="tech-card">
+        <div class="tech-card-title" style="color:var(--purple);"><span class="dot" style="background:var(--purple)"></span>Rule Layer</div>
+        <div class="tech-row"><div class="tech-key" style="color:var(--purple)">Input modes</div><div class="tech-val">Plain English chat · Low-code form builder · Rule document upload (PDF/DOCX parsed)</div></div>
+        <div class="tech-row"><div class="tech-key" style="color:var(--purple)">LLM role</div><div class="tech-val">Claude/GPT-4 as RuleInterpreterAgent backbone — converts NL to structured constraint JSON. No hardcoded rules.</div></div>
+      </div>
+      <div class="tech-card">
+        <div class="tech-card-title" style="color:var(--green);"><span class="dot" style="background:var(--green)"></span>Solver Layer</div>
+        <div class="tech-row"><div class="tech-key" style="color:var(--green)">OR-Tools</div><div class="tech-val">CP-SAT model receives constraint objects from registry. Variables = jobs/machines/time slots. Objective = user-defined KPI weights.</div></div>
+        <div class="tech-row"><div class="tech-key" style="color:var(--green)">Adapter pattern</div><div class="tech-val">Each solver has an adapter class. Constraint registry outputs standard format. Adapter translates. Swap solver = swap adapter only.</div></div>
+      </div>
+      <div class="tech-card">
+        <div class="tech-card-title" style="color:var(--yellow);"><span class="dot" style="background:var(--yellow)"></span>Data Layer</div>
+        <div class="tech-row"><div class="tech-key" style="color:var(--yellow)">MCP standard</div><div class="tech-val">Data contract defined once via MCP definition + UI field mapper. New data source = map fields, agent handles the rest.</div></div>
+        <div class="tech-row"><div class="tech-key" style="color:var(--yellow)">Domain-agnostic</div><div class="tech-val">Entity map abstraction (Resource · Task · TimeSlot · Capacity · Constraint) works for manufacturing, healthcare, logistics, projects.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DOMAIN AGNOSTIC -->
+  <div style="margin-bottom:24px;">
+    <div class="flow-section-title" style="color:var(--orange); margin-bottom:14px;">DOMAIN-AGNOSTIC ENTITY MODEL</div>
+    <div class="badge-row">
+      <div class="badge"><span class="bdot" style="background:var(--cyan)"></span>Resource → Machine / Worker / Nurse / Vehicle / Equipment</div>
+      <div class="badge"><span class="bdot" style="background:var(--purple)"></span>Task → Job / Shift / Appointment / Delivery / Project Phase</div>
+      <div class="badge"><span class="bdot" style="background:var(--green)"></span>TimeSlot → Shift / Window / Duration / Deadline / Calendar</div>
+      <div class="badge"><span class="bdot" style="background:var(--yellow)"></span>Capacity → Load / Headcount / Throughput / Bandwidth</div>
+      <div class="badge"><span class="bdot" style="background:var(--orange)"></span>Constraint → Hard Rule / Soft Preference / Derived from Data</div>
+    </div>
+    <div style="font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--muted2);">
+      Domain changes: Update entity labels in UI mapper + domain-specific KPI templates. Agent logic, solver, and storage unchanged.
+    </div>
+  </div>
+
+</div>
+
+<!-- ===================== PAGE 4: CONFLICT RESOLUTION ===================== -->
+<div class="page" id="page-conflict">
+  <div class="page-header">
+    <div class="page-eyebrow">RuleValidatorAgent · Deep Dive</div>
+    <div class="page-title">Conflict <span>Resolution</span></div>
+    <div class="page-sub">How the system detects, explains, and resolves constraint conflicts</div>
+  </div>
+
+  <div style="margin-bottom:32px;">
+    <div class="flow-section-title" style="color:var(--red); margin-bottom:14px;">CONFLICT DETECTION FLOW</div>
+    <div class="conflict-flow">
+      <div class="cnode c1"><div class="cnode-t">Conflict Detected</div><div class="cnode-s">Two rules produce contradictory constraints</div></div>
+      <div class="farrow">›</div>
+      <div class="cnode c2"><div class="cnode-t">Agent Explains WHY</div><div class="cnode-s">NL explanation of which rules clash and on what entity</div></div>
+      <div class="farrow">›</div>
+      <div class="cnode c3"><div class="cnode-t">3 Options Generated</div><div class="cnode-s">Each with trade-off impact on KPIs shown</div></div>
+      <div class="farrow">›</div>
+      <div class="cnode c4"><div class="cnode-t">User Picks</div><div class="cnode-s">Single click / NL confirm</div></div>
+      <div class="farrow">›</div>
+      <div class="cnode c5"><div class="cnode-t">Registry Updated</div><div class="cnode-s">Re-solve triggered if plan exists</div></div>
+    </div>
+  </div>
+
+  <div style="margin-bottom:32px;">
+    <div class="flow-section-title" style="color:var(--yellow); margin-bottom:14px;">EXAMPLE · MANUFACTURING CONFLICT</div>
+    <div style="background:var(--surface); border:1px solid var(--border2); border-radius:10px; padding:18px 20px; margin-bottom:16px;">
+      <div style="font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--muted2); margin-bottom:8px;">CONFLICT DETECTED</div>
+      <div style="font-size:13px; color:var(--text); margin-bottom:6px;"><strong style="color:var(--red);">Rule A (Hard):</strong> Machine M3 cannot run more than 8 hours without maintenance</div>
+      <div style="font-size:13px; color:var(--text); margin-bottom:12px;"><strong style="color:var(--purple);">Rule B (Hard):</strong> Job J-47 must complete in a single uninterrupted 10-hour run on M3</div>
+      <div style="font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--orange);">⚠ Both are Hard constraints on the same resource at the same time window. Cannot satisfy simultaneously.</div>
+    </div>
+
+    <div class="option-row">
+      <div class="option-card">
+        <div class="opt-num">OPTION 1</div>
+        <div class="opt-title">Relax Rule A → Soft</div>
+        <div style="font-size:11px; color:var(--muted2); margin-bottom:6px;">Allow M3 to run 10hrs with a maintenance flag raised. Schedule maintenance immediately after.</div>
+        <div class="opt-impact">Impact: +15min delay post-job. Minor maintenance risk.</div>
+      </div>
+      <div class="option-card">
+        <div class="opt-num">OPTION 2</div>
+        <div class="opt-title">Split Job J-47</div>
+        <div style="font-size:11px; color:var(--muted2); margin-bottom:6px;">Split into 8hr + 2hr segments with 30min maintenance break. Reschedule second segment.</div>
+        <div class="opt-impact">Impact: +30min total. Job continuity broken. Check downstream.</div>
+      </div>
+      <div class="option-card">
+        <div class="opt-num">OPTION 3</div>
+        <div class="opt-title">Reassign to M4</div>
+        <div style="font-size:11px; color:var(--muted2); margin-bottom:6px;">Move J-47 to Machine M4 which has no 8hr restriction. Check M4 availability window.</div>
+        <div class="opt-impact">Impact: M4 capacity check needed. No maintenance risk.</div>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <div class="flow-section-title" style="color:var(--purple); margin-bottom:14px;">CONFLICT TYPES THE SYSTEM HANDLES</div>
+    <div class="tech-grid">
+      <div class="tech-card">
+        <div class="tech-card-title" style="color:var(--red);"><span class="dot" style="background:var(--red)"></span>Hard vs Hard</div>
+        <div class="tech-row"><div class="tech-val">Two must-satisfy rules cannot both be true simultaneously. Agent must surface to human — cannot auto-resolve.</div></div>
+      </div>
+      <div class="tech-card">
+        <div class="tech-card-title" style="color:var(--yellow);"><span class="dot" style="background:var(--yellow)"></span>Hard vs Soft</div>
+        <div class="tech-row"><div class="tech-val">Hard wins by default. Agent flags that soft preference was dropped and explains KPI impact. No human needed unless KPI breach is critical.</div></div>
+      </div>
+      <div class="tech-card">
+        <div class="tech-card-title" style="color:var(--purple);"><span class="dot" style="background:var(--purple)"></span>Soft vs Soft</div>
+        <div class="tech-row"><div class="tech-val">Agent uses priority weights (1–10) set by user. Higher weight wins. AutoRankerAgent scores both options and suggests. Human can override.</div></div>
+      </div>
+      <div class="tech-card">
+        <div class="tech-card-title" style="color:var(--green);"><span class="dot" style="background:var(--green)"></span>Derived vs Any</div>
+        <div class="tech-val" style="padding:10px 0 0;">Agent-inferred rule conflicts with user rule. Agent explains what it inferred and why. User either confirms derived rule or overrides it.</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  <span>Agentic Scheduling Framework · v2.0 · Domain-Agnostic</span>
+  <span>15 Agents · CP-SAT (Swappable) · LangGraph · MongoDB + Redis</span>
+</footer>
+
+<script>
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  event.target.classList.add('active');
+}
+</script>
+</body>
+</html>
