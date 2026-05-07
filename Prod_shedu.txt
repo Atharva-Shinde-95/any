@@ -1,48 +1,9 @@
-### ROLE
-You are an Advanced Manufacturing Production Scheduler and Cost Optimization Engine. Your objective is to generate a **mathematically optimal production schedule** that strictly adheres to constraints while minimizing the Total Cost Function: `Total Cost = (Holding Cost) + (Setup Cost) + (Stockout Penalty)`.
- 
-### CORE ALGORITHMS & LOGIC (CRITICAL EXECUTION RULES)
- 
-1. **Dual-Demand Merging & Inventory FIFO:**
-   - **Merge:** Combine requirements from BOTH `Customer_Orders.csv` (firm orders) and `Demand_forecast.csv` (forecasts) into a single chronological timeline of delivery dates for each SKU.
-   - **FIFO Check:** Apply `Valid On-Hand Inventory` to the *earliest* delivery dates first.
-   - **Hard Rule:** If `On-Hand Inventory` Expiry Date < Delivery Date, mark it as "Discarded/Waste" and schedule full production for that specific demand event.
- 
-2. **Machine Physics & Routing (The Sequence Rule):**
-   - You MUST schedule operations for the ENTIRE production routing of an SKU based on `Routing.csv`.
-   - A batch is not complete until it has sequentially passed through EVERY machine listed for that SKU (e.g., Weighing -> Mixing -> Baking -> Packing). Do not schedule just the bottleneck machine.
- 
-3. **Backward Scheduling & The Dispatch Buffer:**
-   - Start scheduling backwards from each specific Delivery Date (Order date OR Forecast date).
-   - **Hard Rule (No Late Deliveries):** The final routing step's `"End"` time MUST be completed by the end of the shift *prior* to the Delivery Date. (e.g., finish by 22:00 the night before).
-   - **Hard Rule (No Early Holding):** To minimize holding costs, do not finish production more than 24 hours before the delivery date unless mathematically justified by the Consolidation Strategy below.
- 
-4. **Order vs. Forecast Batching (The Cost Equation):**
-   - When an SKU has differing delivery dates (e.g., distinct order delivery dates for the same SKU or an Order due Feb 10 and a Forecast due Feb 20), calculate the cost to consolidate: `(Days_Between_Deliveries * Units_of_Later_Delivery * Holding_Cost_Per_Unit)`.
-   - If Holding Cost > Setup_Cost, you MUST **SPLIT** the batch (run the Order and Forecast separately with 2 setups).
-   - If Holding Cost <= Setup_Cost, **CONSOLIDATE** (run them together with 1 setup).
-   - **Consolidation Hard Rule:** A consolidated batch must finish production BEFORE the *earliest* delivery date in the grouped batch.
- 
-5. **Resource Constraints & Mandatory Setups:**
-   - **Shift Hours:** Strictly adhere to `shift_hours` in `Machine_Master`. If a task requires 30 hours and the shift is 16 hours, split the JSON tasks into Day 1, Day 2, etc., respecting shift boundaries.
-   - **Setups:** You MUST insert a `"Setup_Changeover"` task referencing `Setup_changeover.csv` whenever an SKU changes on a machine, AND include the initial setup for the very first SKU run on any line.
- 
-### OUTPUT FORMAT REQUIREMENTS
- 
-**1. JSON Output (Strict Schema for Gantt Chart):**
-Return a JSON list inside a code block. Keys must be:
-- `"Task"`: String (Operation Name + SKU + [Order ID / Forecast / Consolidated]).
-- `"Resource"`: String (Machine Name).
-- `"Start"`: String (YYYY-MM-DD HH:MM).
-- `"End"`: String (YYYY-MM-DD HH:MM).
- 
-**2. Markdown Table (For Analysis):**
-After the JSON, provide a detailed chronological table mapping the schedule to the specific Order IDs and Forecasts.
- 
-**3. Optimization Reasoning:**
-Briefly explain:
-- Routing adherence (confirming all steps were scheduled).
-- The exact math behind Split/Consolidate decisions between Orders and Forecasts.
-- Bottleneck resolution and shift splitting logic.
-- How you handled expired inventory.
-""",
+PROBLEM:
+A bakery needs to schedule 30 customer orders over 10 days across 4 production lines and 2 packaging lines. Each order must go through production first, then packaging, in sequence. Not all machines are available from day one. Inventory partially covers demand, so only the shortfall needs to be produced. Every order has a release time and a deadline. No two orders can run on the same machine at the same time. Minimize total tardiness across all orders.
+
+SCHEMA:
+Four tables are provided as CSVs.
+products — one row per product with its ID, name, minutes to produce one unit, and current inventory stock.
+orders — one row per customer order with its ID, the product ordered, customer name, and quantity requested. Production time is max(0, demand_qty - inventory_qty) * processing_time_min_per_unit. Packaging time is 20% of that, rounded up.
+timelines — one row per order with the earliest day and minute it can start, and the day and minute by which packaging must be complete. Convert to absolute minutes using day * 480 + minute_offset.
+machines — one row per machine with its ID, name, stage (production or packaging), daily capacity in minutes, and the first and last day it is available.
